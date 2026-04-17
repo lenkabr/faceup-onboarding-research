@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>In-App Onboarding &amp; User Engagement Tools — FaceUp Research</title>
+  <script>
+    (function() {
+      var PASS = 'faceuptajomstva';
+      var SESSION_KEY = 'faceup_research_auth';
+      if (sessionStorage.getItem(SESSION_KEY) !== '1') {
+        document.addEventListener('DOMContentLoaded', function() {
+          var overlay = document.createElement('div');
+          overlay.id = 'auth-overlay';
+          overlay.style.cssText = 'position:fixed;inset:0;background:#0f1117;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;';
+          overlay.innerHTML = '<div style="background:#1a1d27;border:1px solid #2e3250;border-radius:16px;padding:40px 48px;text-align:center;max-width:380px;width:90%;">' +
+            '<div style="font-size:13px;font-weight:700;letter-spacing:2px;color:#6c63ff;margin-bottom:16px;">FACEUP RESEARCH</div>' +
+            '<h2 style="color:#e2e8f0;font-size:20px;margin:0 0 8px;">In-App Onboarding Tools</h2>' +
+            '<p style="color:#8892b0;font-size:13px;margin:0 0 28px;">This report is password protected.</p>' +
+            '<input id="auth-input" type="password" placeholder="Enter password" style="width:100%;box-sizing:border-box;padding:12px 16px;background:#22263a;border:1px solid #2e3250;border-radius:8px;color:#e2e8f0;font-size:15px;outline:none;margin-bottom:12px;" />' +
+            '<div id="auth-error" style="color:#ff6b6b;font-size:12px;min-height:18px;margin-bottom:8px;"></div>' +
+            '<button id="auth-btn" style="width:100%;padding:12px;background:#6c63ff;border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">Access Report</button>' +
+            '</div>';
+          document.body.appendChild(overlay);
+          document.body.style.overflow = 'hidden';
+          function tryAuth() {
+            var val = document.getElementById('auth-input').value;
+            if (val === PASS) {
+              sessionStorage.setItem(SESSION_KEY, '1');
+              overlay.remove();
+              document.body.style.overflow = '';
+            } else {
+              document.getElementById('auth-error').textContent = 'Incorrect password. Please try again.';
+              document.getElementById('auth-input').value = '';
+              document.getElementById('auth-input').focus();
+            }
+          }
+          document.getElementById('auth-btn').addEventListener('click', tryAuth);
+          document.getElementById('auth-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') tryAuth(); });
+          setTimeout(function() { document.getElementById('auth-input').focus(); }, 100);
+        });
+      }
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #6c63ff;
+      --accent2: #ff6b6b;
+      --accent3: #43e97b;
+      --text: #e8eaf6;
+      --text-muted: #8892b0;
+      --text-dim: #4a5568;
+      --green: #43e97b;
+      --yellow: #f7c948;
+      --red: #ff6b6b;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    /* ---- HEADER ---- */
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+    header .badge {
+      display: inline-block;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.4);
+      color: #a78bfa;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: clamp(24px, 4vw, 42px);
+      font-weight: 800;
+      background: linear-gradient(135deg, #e8eaf6 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 600px;
+      margin: 0 auto 24px;
+    }
+    .header-meta {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .header-meta span {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .header-meta span strong { color: var(--text); }
+    /* ---- NAV ---- */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15,17,23,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+    }
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 14px 16px;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    nav a:hover, nav a.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    /* ---- MAIN ---- */
+    main { max-width: 1400px; margin: 0 auto; padding: 0 24px 80px; }
+    section { padding: 56px 0 0; }
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .section-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+    /* ---- CARDS GRID ---- */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .tool-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-color, var(--accent));
+    }
+    .tool-card:hover {
+      border-color: var(--card-color, var(--accent));
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .tool-card .rank {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 2px 8px;
+    }
+    .tool-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .tool-card .price {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .score-bar-wrap {
+      margin-bottom: 12px;
+    }
+    .score-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .score-bar-label strong { color: var(--text); }
+    .score-bar {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--card-color, var(--accent));
+      transition: width 1s ease;
+    }
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+    .tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .tag-green { background: rgba(67,233,123,0.12); color: #43e97b; }
+    .tag-red { background: rgba(255,107,107,0.12); color: #ff6b6b; }
+    .tag-blue { background: rgba(69,183,209,0.12); color: #45b7d1; }
+    .req-count {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .req-count strong { color: var(--text); font-size: 16px; }
+    /* ---- CHARTS ---- */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .chart-card h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+    .chart-card canvas { max-height: 340px; }
+    .chart-full {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .chart-full h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    /* ---- COMPARISON TABLE ---- */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      background: var(--surface2);
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    thead th:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: var(--surface2);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td {
+      padding: 11px 14px;
+      vertical-align: middle;
+    }
+    tbody td:first-child {
+      position: sticky;
+      left: 0;
+      background: var(--surface);
+      z-index: 1;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    tbody tr:hover td:first-child { background: var(--surface2); }
+    .cell-full { color: var(--green); font-size: 16px; text-align: center; }
+    .cell-partial { color: var(--yellow); font-size: 16px; text-align: center; }
+    .cell-none { color: var(--red); font-size: 16px; text-align: center; opacity: 0.5; }
+    .req-type-must {
+      background: rgba(108,99,255,0.06);
+    }
+    .req-type-nice {
+      background: rgba(255,255,255,0.02);
+    }
+    .req-label {
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      font-weight: 600;
+    }
+    .req-must { background: rgba(108,99,255,0.2); color: #a78bfa; }
+    .req-nice { background: rgba(247,201,72,0.15); color: #f7c948; }
+    /* ---- FILTER CONTROLS ---- */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .filter-bar label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+    .filter-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: rgba(108,99,255,0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    /* ---- TOOL DETAIL MODAL ---- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      max-width: 680px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 32px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { color: var(--text); border-color: var(--text-muted); }
+    .modal h2 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .modal .modal-url {
+      font-size: 13px;
+      color: var(--accent);
+      margin-bottom: 16px;
+      text-decoration: none;
+    }
+    .modal .modal-url:hover { text-decoration: underline; }
+    .modal .modal-price {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .modal .modal-price strong { color: var(--green); }
+    .pros-cons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .pros-cons-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .pros-cons-box h5 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .pros-cons-box.pros h5 { color: var(--green); }
+    .pros-cons-box.cons h5 { color: var(--red); }
+    .pros-cons-box ul { list-style: none; }
+    .pros-cons-box ul li {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 3px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+    .pros-cons-box.pros ul li::before { content: '+'; color: var(--green); position: absolute; left: 0; }
+    .pros-cons-box.cons ul li::before { content: '−'; color: var(--red); position: absolute; left: 0; }
+    .modal-req-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+    .modal-req-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-req-item .req-icon { font-size: 14px; flex-shrink: 0; }
+    /* ---- LEGEND ---- */
+    .legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .legend-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    /* ---- RECOMMENDATION ---- */
+    .rec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .rec-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      border-left: 3px solid var(--card-color, var(--accent));
+    }
+    .rec-card .rec-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--card-color, var(--accent));
+      margin-bottom: 8px;
+    }
+    .rec-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .rec-card p { font-size: 13px; color: var(--text-muted); }
+    /* ---- FOOTER ---- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 600px) {
+      .pros-cons { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+    /* ---- TOOLTIP ---- */
+    [data-tooltip] { position: relative; cursor: help; }
+    [data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--text);
+      white-space: nowrap;
+      z-index: 50;
+      pointer-events: none;
+    }
+    .sort-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px 4px;
+    }
+    .sort-btn:hover { color: var(--accent); }
+    .score-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .score-high { background: rgba(67,233,123,0.15); color: #43e97b; }
+    .score-mid { background: rgba(247,201,72,0.15); color: #f7c948; }
+    .score-low { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">FaceUp Research · April 2026</div>
+  <h1>In-App Onboarding &amp; User Engagement Tools</h1>
+  <p>Comprehensive evaluation of 8 tools against 19 requirements — 15 must-haves and 4 nice-to-haves. Now enhanced with G2 community ratings.<br><em style="font-size:13px;opacity:0.7">Product Fruits excluded based on prior team experience. See methodology note below.</em></p>
+  <div class="header-meta">
+    <span><strong>8</strong> Tools Evaluated</span>
+    <span><strong>19</strong> Requirements</span>
+    <span><strong>15</strong> Must-Haves</span>
+    <span><strong>4</strong> Nice-to-Haves</span>
+    <span><strong>G2</strong> Ratings Added</span>
+  </div>
+</header>
+
+<nav id="main-nav">
+  <a href="#overview" class="active">Overview</a>
+  <a href="#charts">Charts</a>
+  <a href="#comparison">Comparison Matrix</a>
+  <a href="#recommendations">Recommendations</a>
+</nav>
+
+<main>
+
+  <!-- ===== METHODOLOGY NOTE ===== -->
+  <section id="methodology" style="background:rgba(247,201,72,0.06);border:1px solid rgba(247,201,72,0.2);border-radius:12px;padding:20px 24px;margin-bottom:8px;">
+    <div style="font-size:13px;font-weight:700;color:#f7c948;margin-bottom:8px;">&#9888; Selection Methodology &amp; Limitations</div>
+    <div style="font-size:13px;color:var(--text-muted);line-height:1.7;">
+      <strong>How tools were selected:</strong> Initial shortlist was derived from a Chameleon blog post (a biased source — Chameleon is itself a vendor) plus one additional tool (Jimo) found via search. This means the selection reflects <em>marketing visibility</em>, not a systematic scan of all available tools.
+      <br><br>
+      <strong>What was NOT done:</strong> No systematic scan of G2's 94+ tools in this category was performed before scoring. Tools with smaller marketing budgets may have been missed.
+      <br><br>
+      <strong>G2 scan result (April 2026):</strong> After checking the G2 category, the following tools were evaluated as potential additions but excluded: <strong>Usetiful</strong> (acquired by Fullstory Nov 2025, no longer standalone), <strong>Whatfix</strong> (enterprise-only, no public pricing), <strong>Stonly</strong> (knowledge base tool, not onboarding-first), <strong>Froged</strong> (4.2/5, only 14 reviews — insufficient data), <strong>Helppier</strong> (3.8/5, 6 reviews — too early-stage). The 8 evaluated tools remain the best available shortlist.
+      <br><br>
+      <strong>G2 data confidence:</strong> Ratings and review counts collected via search snippets and G2 comparison pages. Some figures (especially for newer tools like Jimo) may be slightly outdated. Always verify on G2 directly before making final decisions.
+    </div>
+  </section>
+
+  <!-- ===== OVERVIEW ===== -->
+  <section id="overview">
+    <div class="section-title">Tool Overview &amp; Scores</div>
+    <div class="section-subtitle">Click any card to view detailed requirements breakdown. Sorted by overall score.</div>
+    <div class="filter-bar">
+      <label>Sort by:</label>
+      <button class="filter-btn active" onclick="sortCards('score')">Overall Score</button>
+      <button class="filter-btn" onclick="sortCards('must')">Must-Have Score</button>
+      <button class="filter-btn" onclick="sortCards('price')">Price</button>
+      <button class="filter-btn" onclick="sortCards('name')">Name</button>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </section>
+
+  <!-- ===== CHARTS ===== -->
+  <section id="charts">
+    <div class="section-title">Visual Analysis</div>
+    <div class="section-subtitle">Interactive charts to explore tool performance across different dimensions.</div>
+
+    <div class="chart-full">
+      <h4>Overall Score vs. Must-Have Score (Weighted)</h4>
+      <canvas id="chartRadar" style="max-height:420px;"></canvas>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h4>Requirements Met (out of 19)</h4>
+        <canvas id="chartReqsMet"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>Starting Price (USD/month)</h4>
+        <canvas id="chartPrice"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>Must-Have vs Nice-to-Have Score (%)</h4>
+        <canvas id="chartMustNice"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>Score Breakdown by Category</h4>
+        <canvas id="chartBubble"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>G2 Rating vs. Review Count</h4>
+        <canvas id="chartG2"></canvas>
+      </div>
+    </div>
+    <div class="chart-full" style="margin-top:24px">
+      <h4>G2 Review Volume (Community Validation)</h4>
+      <canvas id="chartG2Reviews" style="max-height:320px;"></canvas>
+    </div>
+  </section>
+
+  <!-- ===== COMPARISON TABLE ===== -->
+  <section id="comparison">
+    <div class="section-title">Full Requirements Matrix</div>
+    <div class="section-subtitle">✓✓ = Fully supported &nbsp;|&nbsp; ~ = Partially supported &nbsp;|&nbsp; ✗ = Not supported</div>
+    <div class="legend">
+      <div class="legend-item"><span style="color:#43e97b;font-size:16px;">✓✓</span> Fully supported</div>
+      <div class="legend-item"><span style="color:#f7c948;font-size:16px;">~</span> Partially / plan-gated</div>
+      <div class="legend-item"><span style="color:#ff6b6b;font-size:16px;">✗</span> Not supported</div>
+      <div class="legend-item"><span class="req-label req-must">MUST</span> Must-have requirement</div>
+      <div class="legend-item"><span class="req-label req-nice">NICE</span> Nice-to-have</div>
+    </div>
+    <div class="table-wrap" id="comparison-table"></div>
+  </section>
+
+  <!-- ===== RECOMMENDATIONS ===== -->
+  <section id="recommendations">
+    <div class="section-title">Recommendations</div>
+    <div class="section-subtitle">Tailored suggestions based on specific use cases and priorities.</div>
+    <div class="rec-grid" id="rec-grid"></div>
+  </section>
+
+</main>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<footer>
+  Research conducted April 2026 · FaceUp Internal · Pricing and features subject to change · Always verify with vendor
+</footer>
+
+<script>
+// ===================== DATA =====================
+const requirements = [
+  { id: "R01", name: "Affordable Pricing", type: "must" },
+  { id: "R02", name: "HubSpot Integration", type: "must" },
+  { id: "R03", name: "User Communication (popups/surveys/feedback)", type: "must" },
+  { id: "R04", name: "In-App Announcements / Product Updates", type: "must" },
+  { id: "R05", name: "Onboarding Flow / Product Tour", type: "must" },
+  { id: "R06", name: "Onboarding Checklists", type: "must" },
+  { id: "R07", name: "Skip / Dismiss Onboarding", type: "must" },
+  { id: "R08", name: "Design Customization (On-Brand)", type: "must" },
+  { id: "R09", name: "Targeting & Segmentation", type: "must" },
+  { id: "R10", name: "Event-Based Triggers", type: "must" },
+  { id: "R11", name: "Analytics & Tracking", type: "must" },
+  { id: "R12", name: "No/Low Engineering Dependency", type: "must" },
+  { id: "R13", name: "Performance & UX Impact", type: "must" },
+  { id: "R14", name: "Frequency Control (Anti-Spam)", type: "must" },
+  { id: "R15", name: "Fast Implementation (1–2 weeks)", type: "must" },
+  { id: "R16", name: "Multi-Language Support", type: "nice" },
+  { id: "R17", name: "PostHog / Backend Event Integrations", type: "nice" },
+  { id: "R18", name: "Beyond Onboarding Use Cases", type: "nice" },
+  { id: "R19", name: "Security & Compliance (GDPR)", type: "nice" },
+];
+
+const tools = {
+  // Product Fruits removed — team used it previously, experienced: unreliable (frequent breakage),
+  // technically complex to maintain across multiple user types, not marketer-friendly,
+  // heavy developer dependency for edits. HubSpot also only on Pro ($187/mo), not Starter.
+  "Jimo": {
+    url: "https://jimo.ai",
+    startingPrice: 249,
+    pricingNote: "$249/mo (Starter, 2.5k MAUs, billed annually)",
+    color: "#DDA0DD",
+    scores: { R01:1,R02:2,R03:2,R04:2,R05:2,R06:2,R07:2,R08:2,R09:2,R10:2,R11:2,R12:2,R13:2,R14:2,R15:2,R16:2,R17:1,R18:2,R19:2 },
+    pros: ["HubSpot on ALL plans incl. Starter", "Localization on all plans", "AI-powered tours", "Unlimited segmentation", "PostHog on Growth"],
+    cons: ["PostHog only on Growth ($499/mo)", "No branding removal on Starter", "Newer/smaller community"],
+    bestFor: "Teams needing HubSpot + localization from day one",
+    scorePct: 95.6, mustPct: 96.7, nicePct: 87.5, reqsMet: 19, reqsFull: 17,
+    g2Rating: 4.6, g2Reviews: 31, g2Badges: "None yet", g2Category: "Digital Adoption Platform",
+  },
+  "Userflow": {
+    url: "https://userflow.com",
+    startingPrice: 240,
+    pricingNote: "$240/mo (Startup, 3k MAUs, billed annually)",
+    color: "#45B7D1",
+    scores: { R01:1,R02:1,R03:2,R04:2,R05:2,R06:2,R07:2,R08:2,R09:2,R10:2,R11:2,R12:2,R13:2,R14:2,R15:2,R16:2,R17:0,R18:2,R19:2 },
+    pros: ["AI-powered features (FlowAI)", "Clean, modern UI", "Good analytics", "AI translation built-in"],
+    cons: ["HubSpot only on Pro ($680/mo)", "No PostHog integration", "Surveys limited on Startup"],
+    bestFor: "Teams willing to invest more for AI-powered onboarding",
+    scorePct: 91.2, mustPct: 93.3, nicePct: 75.0, reqsMet: 18, reqsFull: 16,
+    g2Rating: 4.8, g2Reviews: 112, g2Badges: "None listed", g2Category: "Digital Adoption Platform",
+  },
+  "Appcues": {
+    url: "https://appcues.com",
+    startingPrice: 249,
+    pricingNote: "$249/mo (Essentials, 3k MAUs) — demo required",
+    color: "#FD79A8",
+    scores: { R01:0,R02:1,R03:2,R04:2,R05:2,R06:2,R07:2,R08:2,R09:2,R10:2,R11:2,R12:2,R13:2,R14:2,R15:2,R16:2,R17:0,R18:2,R19:2 },
+    pros: ["Mature, battle-tested platform", "HubSpot available (select plans/add-on)", "Strong ecosystem & docs", "Good A/B testing"],
+    cons: ["Expensive ($879/mo for Growth)", "HubSpot on select plans or as add-on", "No PostHog integration", "No free trial"],
+    bestFor: "Mid-market teams with budget for premium onboarding",
+    scorePct: 88.2, mustPct: 90.0, nicePct: 75.0, reqsMet: 17, reqsFull: 16,
+    g2Rating: 4.6, g2Reviews: 342, g2Badges: "None listed", g2Category: "Digital Adoption Platform",
+  },
+  "Chameleon": {
+    url: "https://chameleon.io",
+    startingPrice: 279,
+    pricingNote: "$279/mo (Startup, ~1k MTUs)",
+    color: "#96CEB4",
+    scores: { R01:1,R02:2,R03:2,R04:2,R05:2,R06:1,R07:2,R08:2,R09:2,R10:2,R11:2,R12:2,R13:2,R14:2,R15:2,R16:1,R17:0,R18:2,R19:2 },
+    pros: ["Highly customizable design", "HubSpot on all plans", "Strong segmentation", "A/B testing (Growth+)"],
+    cons: ["Localization only on Enterprise", "No PostHog", "Startup plan limited (5 microsurveys, 1 launcher)"],
+    bestFor: "Design-focused teams needing maximum customization",
+    scorePct: 89.7, mustPct: 93.3, nicePct: 62.5, reqsMet: 18, reqsFull: 15,
+    g2Rating: 4.4, g2Reviews: 350, g2Badges: "Leader, Momentum", g2Category: "Digital Adoption Platform",
+  },
+  "UserGuiding": {
+    url: "https://userguiding.com",
+    startingPrice: 174,
+    pricingNote: "$174/mo (Starter, 2k MAUs, billed annually)",
+    color: "#4ECDC4",
+    scores: { R01:2,R02:1,R03:2,R04:2,R05:2,R06:2,R07:2,R08:1,R09:1,R10:1,R11:2,R12:2,R13:2,R14:2,R15:2,R16:1,R17:0,R18:2,R19:2 },
+    pros: ["30-day money-back guarantee", "Very affordable entry price", "Good customer support", "Proven tool"],
+    cons: ["HubSpot only on Growth ($349/mo) — NOT on Starter ($174/mo)", "Limited segmentation on Starter", "No PostHog integration"],
+    bestFor: "Teams wanting low financial risk, willing to upgrade for HubSpot",
+    scorePct: 84.2, mustPct: 86.7, nicePct: 62.5, reqsMet: 18, reqsFull: 13,
+    g2Rating: 4.7, g2Reviews: 757, g2Badges: "G2 Best Software, High Performer, Leader Small Business", g2Category: "Digital Adoption Platform",
+  },
+  "Intercom": {
+    url: "https://intercom.com",
+    startingPrice: 128,
+    pricingNote: "$29/seat/mo + $99/mo Proactive Support Plus add-on",
+    color: "#74B9FF",
+    scores: { R01:1,R02:2,R03:2,R04:2,R05:1,R06:1,R07:2,R08:2,R09:2,R10:2,R11:2,R12:2,R13:1,R14:2,R15:2,R16:2,R17:0,R18:2,R19:2 },
+    pros: ["Best-in-class customer communication", "Native HubSpot integration", "Live chat + onboarding combined", "Strong automation"],
+    cons: ["Product tours require $99/mo add-on", "Primarily a support tool, not onboarding-first", "Can feel heavy for pure onboarding"],
+    bestFor: "Teams wanting combined support + onboarding in one platform",
+    scorePct: 85.3, mustPct: 86.7, nicePct: 75.0, reqsMet: 18, reqsFull: 14,
+    g2Rating: 4.5, g2Reviews: 3834, g2Badges: "Leader", g2Category: "Live Chat / Help Desk",
+  },
+  "Pendo": {
+    url: "https://pendo.io",
+    startingPrice: 0,
+    pricingNote: "Free (500 MAUs) / Custom pricing ($15K–$142K/yr for paid)",
+    color: "#A29BFE",
+    scores: { R01:0,R02:2,R03:2,R04:2,R05:2,R06:2,R07:2,R08:1,R09:2,R10:2,R11:2,R12:2,R13:2,R14:2,R15:1,R16:2,R17:0,R18:2,R19:2 },
+    pros: ["Best-in-class analytics (retroactive)", "Enterprise-grade", "Free tier available (500 MAUs)", "Journey orchestration"],
+    cons: ["Very expensive ($15K+/yr for paid)", "Complex implementation", "No PostHog", "Overkill for SMB"],
+    bestFor: "Enterprise teams where analytics depth justifies cost",
+    scorePct: 85.3, mustPct: 86.7, nicePct: 75.0, reqsMet: 17, reqsFull: 15,
+    g2Rating: 4.4, g2Reviews: 1768, g2Badges: "Leader, Best Software 2024", g2Category: "Product Analytics / Digital Adoption",
+  },
+  "Userpilot": {
+    url: "https://userpilot.com",
+    startingPrice: 299,
+    pricingNote: "$299/mo (Starter, 2k MAUs, billed annually)",
+    color: "#FFEAA7",
+    scores: { R01:1,R02:2,R03:2,R04:2,R05:2,R06:2,R07:2,R08:1,R09:1,R10:1,R11:2,R12:2,R13:2,R14:1,R15:2,R16:1,R17:0,R18:2,R19:2 },
+    pros: ["HubSpot on Starter ($299/mo)", "Strong analytics", "Good PLG features", "HIPAA compliant"],
+    cons: ["Most expensive Starter plan ($299/mo)", "Many features gated to Growth+", "Starter quite limited overall"],
+    bestFor: "Product-led growth teams with analytics focus",
+    scorePct: 80.9, mustPct: 83.3, nicePct: 62.5, reqsMet: 18, reqsFull: 12,
+    g2Rating: 4.6, g2Reviews: 976, g2Badges: "None listed", g2Category: "Digital Adoption Platform",
+  },
+};
+
+// ===================== SORTED TOOLS =====================
+const sortedToolNames = Object.keys(tools).sort((a, b) => tools[b].scorePct - tools[a].scorePct);
+
+// ===================== RENDER CARDS =====================
+function renderCards(sortKey = 'score') {
+  const grid = document.getElementById('cards-grid');
+  let sorted = [...sortedToolNames];
+  if (sortKey === 'must') sorted.sort((a,b) => tools[b].mustPct - tools[a].mustPct);
+  else if (sortKey === 'price') sorted.sort((a,b) => tools[a].startingPrice - tools[b].startingPrice);
+  else if (sortKey === 'name') sorted.sort((a,b) => a.localeCompare(b));
+  else sorted.sort((a,b) => tools[b].scorePct - tools[a].scorePct);
+
+  grid.innerHTML = sorted.map((name, i) => {
+    const t = tools[name];
+    const scoreClass = t.scorePct >= 90 ? 'score-high' : t.scorePct >= 80 ? 'score-mid' : 'score-low';
+    const priceDisplay = t.startingPrice === 0 ? 'Free tier available' : `From $${t.startingPrice}/mo`;
+    return `
+      <div class="tool-card" style="--card-color:${t.color}" onclick="openModal('${name}')">
+        <div class="rank">#${i+1}</div>
+        <h3 style="color:${t.color}">${name}</h3>
+        <div class="price">${priceDisplay}</div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Overall Score</span>
+            <strong><span class="score-pill ${scoreClass}">${t.scorePct}%</span></strong>
+          </div>
+          <div class="score-bar"><div class="score-bar-fill" style="width:${t.scorePct}%;background:${t.color}"></div></div>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-label">
+            <span>Must-Have Score</span>
+            <strong>${t.mustPct}%</strong>
+          </div>
+          <div class="score-bar"><div class="score-bar-fill" style="width:${t.mustPct}%;background:${t.color};opacity:0.7"></div></div>
+        </div>
+        <div class="req-count">
+          Requirements met: <strong>${t.reqsMet}</strong>/${requirements.length}
+          &nbsp;·&nbsp; Fully: <strong>${t.reqsFull}</strong>
+        </div>
+        <div class="g2-row" style="display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px;">
+          <span style="color:#ff6b35;font-weight:700;">G2</span>
+          <span style="color:#f7c948;">${'★'.repeat(Math.round(t.g2Rating))}${'☆'.repeat(5-Math.round(t.g2Rating))}</span>
+          <span style="color:var(--text-muted);">${t.g2Rating}/5</span>
+          <span style="color:var(--text-dim);">(${t.g2Reviews.toLocaleString()} reviews)</span>
+        </div>
+        <div class="card-tags">
+          ${t.pros.slice(0,2).map(p => `<span class="tag tag-green">${p}</span>`).join('')}
+          ${t.cons.slice(0,1).map(c => `<span class="tag tag-red">${c}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function sortCards(key) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderCards(key);
+}
+
+// ===================== RENDER TABLE =====================
+function renderTable() {
+  const wrap = document.getElementById('comparison-table');
+  const sorted = sortedToolNames;
+  let html = `<table><thead><tr>
+    <th>Requirement</th>
+    ${sorted.map(n => `<th style="color:${tools[n].color}">${n}</th>`).join('')}
+  </tr></thead><tbody>`;
+
+  requirements.forEach(req => {
+    const rowClass = req.type === 'must' ? 'req-type-must' : 'req-type-nice';
+    html += `<tr class="${rowClass}">
+      <td>
+        ${req.name}
+        <span class="req-label req-${req.type}">${req.type.toUpperCase()}</span>
+      </td>`;
+    sorted.forEach(name => {
+      const s = tools[name].scores[req.id];
+      if (s === 2) html += `<td class="cell-full" title="Fully supported">✓</td>`;
+      else if (s === 1) html += `<td class="cell-partial" title="Partially supported / plan-gated">~</td>`;
+      else html += `<td class="cell-none" title="Not supported">✗</td>`;
+    });
+    html += '</tr>';
+  });
+
+  // Score row
+  html += `<tr style="background:rgba(108,99,255,0.08)">
+    <td><strong>Overall Score</strong></td>
+    ${sorted.map(n => {
+      const t = tools[n];
+      const cls = t.scorePct >= 90 ? 'score-high' : t.scorePct >= 80 ? 'score-mid' : 'score-low';
+      return `<td style="text-align:center"><span class="score-pill ${cls}">${t.scorePct}%</span></td>`;
+    }).join('')}
+  </tr>`;
+
+  // G2 rating row
+  html += `<tr style="background:rgba(255,107,53,0.06)">
+    <td><strong style="color:#ff6b35;">G2 Rating</strong> <span style="font-size:11px;color:var(--text-muted)">(community)</span></td>
+    ${sorted.map(n => {
+      const t = tools[n];
+      return `<td style="text-align:center;font-size:12px;">
+        <span style="color:#f7c948;">${'\u2605'.repeat(Math.round(t.g2Rating))}</span><br>
+        <span style="font-weight:600;">${t.g2Rating}</span>
+        <span style="color:var(--text-muted);font-size:10px;">(${t.g2Reviews >= 1000 ? (t.g2Reviews/1000).toFixed(1)+'k' : t.g2Reviews})</span>
+      </td>`;
+    }).join('')}
+  </tr>`;
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ===================== CHARTS =====================
+function renderCharts() {
+  const sorted = sortedToolNames;
+  const colors = sorted.map(n => tools[n].color);
+
+  // 1. Radar chart (overall vs must)
+  new Chart(document.getElementById('chartRadar'), {
+    type: 'bar',
+    data: {
+      labels: sorted,
+      datasets: [
+        {
+          label: 'Overall Score (%)',
+          data: sorted.map(n => tools[n].scorePct),
+          backgroundColor: colors.map(c => c + '99'),
+          borderColor: colors,
+          borderWidth: 2,
+          borderRadius: 6,
+        },
+        {
+          label: 'Must-Have Score (%)',
+          data: sorted.map(n => tools[n].mustPct),
+          backgroundColor: colors.map(c => c + '44'),
+          borderColor: colors.map(c => c + 'aa'),
+          borderWidth: 1,
+          borderRadius: 6,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#8892b0' } },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` } }
+      },
+      scales: {
+        x: { ticks: { color: '#8892b0' }, grid: { color: '#2e3250' } },
+        y: { min: 60, max: 105, ticks: { color: '#8892b0', callback: v => v + '%' }, grid: { color: '#2e3250' } }
+      }
+    }
+  });
+
+  // 2. Requirements met
+  new Chart(document.getElementById('chartReqsMet'), {
+    type: 'bar',
+    data: {
+      labels: sorted,
+      datasets: [{
+        label: 'Fully Met',
+        data: sorted.map(n => tools[n].reqsFull),
+        backgroundColor: colors.map(c => c + 'cc'),
+        borderRadius: 4,
+      }, {
+        label: 'Partially Met',
+        data: sorted.map(n => tools[n].reqsMet - tools[n].reqsFull),
+        backgroundColor: '#f7c94866',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#8892b0' } } },
+      scales: {
+        x: { stacked: true, ticks: { color: '#8892b0' }, grid: { color: '#2e3250' } },
+        y: { stacked: true, max: 19, ticks: { color: '#8892b0' }, grid: { color: '#2e3250' } }
+      }
+    }
+  });
+
+  // 3. Price chart
+  const priceData = sorted.map(n => tools[n].startingPrice || 0);
+  new Chart(document.getElementById('chartPrice'), {
+    type: 'bar',
+    data: {
+      labels: sorted,
+      datasets: [{
+        label: 'Starting Price ($/mo)',
+        data: priceData,
+        backgroundColor: colors.map(c => c + 'bb'),
+        borderColor: colors,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#8892b0' } },
+        tooltip: { callbacks: { label: ctx => `$${ctx.raw}/mo` } }
+      },
+      scales: {
+        x: { ticks: { color: '#8892b0' }, grid: { color: '#2e3250' } },
+        y: { ticks: { color: '#8892b0', callback: v => '$' + v }, grid: { color: '#2e3250' } }
+      }
+    }
+  });
+
+  // 4. Must vs Nice horizontal bar
+  new Chart(document.getElementById('chartMustNice'), {
+    type: 'bar',
+    data: {
+      labels: sorted,
+      datasets: [
+        {
+          label: 'Must-Have (%)',
+          data: sorted.map(n => tools[n].mustPct),
+          backgroundColor: '#6c63ff99',
+          borderColor: '#6c63ff',
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+        {
+          label: 'Nice-to-Have (%)',
+          data: sorted.map(n => tools[n].nicePct),
+          backgroundColor: '#f7c94866',
+          borderColor: '#f7c948',
+          borderWidth: 1,
+          borderRadius: 4,
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { labels: { color: '#8892b0' } } },
+      scales: {
+        x: { min: 0, max: 105, ticks: { color: '#8892b0', callback: v => v + '%' }, grid: { color: '#2e3250' } },
+        y: { ticks: { color: '#8892b0' }, grid: { color: '#2e3250' } }
+      }
+    }
+  });
+
+  // 5. Bubble: price vs score, size = reqs met
+  new Chart(document.getElementById('chartBubble'), {
+    type: 'bubble',
+    data: {
+      datasets: sorted.map(name => ({
+        label: name,
+        data: [{
+          x: tools[name].startingPrice || 5,
+          y: tools[name].scorePct,
+          r: tools[name].reqsFull * 0.9 + 4,
+        }],
+        backgroundColor: tools[name].color + '99',
+        borderColor: tools[name].color,
+        borderWidth: 2,
+      }))
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#8892b0', font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const n = ctx.dataset.label;
+              return [`${n}`, `Price: $${ctx.raw.x}/mo`, `Score: ${ctx.raw.y}%`, `Full reqs: ${tools[n].reqsFull}`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Starting Price ($/mo)', color: '#8892b0' },
+          ticks: { color: '#8892b0', callback: v => '$' + v },
+          grid: { color: '#2e3250' }
+        },
+        y: {
+          title: { display: true, text: 'Overall Score (%)', color: '#8892b0' },
+          min: 70, max: 105,
+          ticks: { color: '#8892b0', callback: v => v + '%' },
+          grid: { color: '#2e3250' }
+        }
+      }
+    }
+  });
+
+  // 6. G2 Rating scatter chart (rating vs review count)
+  new Chart(document.getElementById('chartG2'), {
+    type: 'bubble',
+    data: {
+      datasets: sorted.map(n => ({
+        label: n,
+        data: [{ x: tools[n].g2Rating, y: tools[n].scorePct, r: Math.min(Math.sqrt(tools[n].g2Reviews) * 1.2, 30) }],
+        backgroundColor: tools[n].color + '99',
+        borderColor: tools[n].color,
+        borderWidth: 2,
+      }))
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#8892b0', font: { size: 10 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const n = ctx.dataset.label;
+              return [`${n}`, `G2: ${tools[n].g2Rating}/5`, `Reviews: ${tools[n].g2Reviews}`, `Our Score: ${tools[n].scorePct}%`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'G2 Rating (out of 5)', color: '#8892b0' },
+          min: 4.0, max: 5.0,
+          ticks: { color: '#8892b0' },
+          grid: { color: '#2e3250' }
+        },
+        y: {
+          title: { display: true, text: 'Our Requirements Score (%)', color: '#8892b0' },
+          min: 70, max: 105,
+          ticks: { color: '#8892b0', callback: v => v + '%' },
+          grid: { color: '#2e3250' }
+        }
+      }
+    }
+  });
+
+  // 7. G2 Review count bar chart
+  new Chart(document.getElementById('chartG2Reviews'), {
+    type: 'bar',
+    data: {
+      labels: sorted,
+      datasets: [{
+        label: 'G2 Review Count',
+        data: sorted.map(n => tools[n].g2Reviews),
+        backgroundColor: sorted.map(n => tools[n].color + '99'),
+        borderColor: sorted.map(n => tools[n].color),
+        borderWidth: 2,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#8892b0' } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const n = ctx.label;
+              return [`Reviews: ${ctx.raw}`, `G2 Rating: ${tools[n].g2Rating}/5`, `Badges: ${tools[n].g2Badges}`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#8892b0' }, grid: { color: '#2e3250' } },
+        y: {
+          ticks: { color: '#8892b0' },
+          grid: { color: '#2e3250' },
+          title: { display: true, text: 'Number of G2 Reviews', color: '#8892b0' }
+        }
+      }
+    }
+  });
+}
+
+// ===================== MODAL =====================
+function openModal(name) {
+  const t = tools[name];
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <h2 style="color:${t.color}">${name}</h2>
+    <a href="${t.url}" target="_blank" class="modal-url">${t.url} ↗</a>
+    <div class="modal-price">
+      💰 <strong>${t.pricingNote}</strong>
+    </div>
+    <div style="margin-bottom:16px">
+      <span style="font-size:13px;color:var(--text-muted)">Overall Score: </span>
+      <span class="score-pill ${t.scorePct>=90?'score-high':t.scorePct>=80?'score-mid':'score-low'}">${t.scorePct}%</span>
+      &nbsp;
+      <span style="font-size:13px;color:var(--text-muted)">Must-Have: </span>
+      <span class="score-pill ${t.mustPct>=90?'score-high':t.mustPct>=80?'score-mid':'score-low'}">${t.mustPct}%</span>
+      &nbsp;
+      <span style="font-size:13px;color:var(--text-muted)">Requirements met: </span>
+      <strong>${t.reqsMet}/${requirements.length}</strong>
+    </div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;font-style:italic">
+      Best for: ${t.bestFor}
+    </div>
+    <div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.25);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <span style="color:#ff6b35;font-weight:700;font-size:14px;">G2</span>
+      <span style="color:#f7c948;font-size:18px;">${'\u2605'.repeat(Math.round(t.g2Rating))}${'\u2606'.repeat(5-Math.round(t.g2Rating))}</span>
+      <span style="font-weight:600;">${t.g2Rating}/5</span>
+      <span style="color:var(--text-muted);">${t.g2Reviews.toLocaleString()} verified reviews</span>
+      <span style="color:var(--text-dim);font-size:12px;">${t.g2Category}</span>
+      ${t.g2Badges && t.g2Badges !== 'None yet' && t.g2Badges !== 'None listed' ? `<span style="background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.3);border-radius:4px;padding:2px 8px;font-size:11px;color:#a78bfa;">${t.g2Badges}</span>` : ''}
+    </div>
+    <div class="pros-cons">
+      <div class="pros-cons-box pros">
+        <h5>Pros</h5>
+        <ul>${t.pros.map(p => `<li>${p}</li>`).join('')}</ul>
+      </div>
+      <div class="pros-cons-box cons">
+        <h5>Cons</h5>
+        <ul>${t.cons.map(c => `<li>${c}</li>`).join('')}</ul>
+      </div>
+    </div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:12px">Requirements Breakdown</div>
+    <div class="modal-req-grid">
+      ${requirements.map(req => {
+        const s = t.scores[req.id];
+        const icon = s===2 ? '✅' : s===1 ? '⚠️' : '❌';
+        const color = s===2 ? 'var(--green)' : s===1 ? 'var(--yellow)' : 'var(--red)';
+        return `<div class="modal-req-item">
+          <span class="req-icon">${icon}</span>
+          <span style="color:${color};font-size:11px">${req.name}</span>
+          <span class="req-label req-${req.type}" style="margin-left:auto">${req.type.toUpperCase()}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+function closeModalBtn() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ===================== RECOMMENDATIONS =====================
+function renderRecommendations() {
+  const recs = [
+    {
+      label: "🏆 Best Overall",
+      name: "Jimo",
+      color: "#DDA0DD",
+      desc: "Highest score (95.6%) among evaluated tools. HubSpot available on ALL plans including Starter ($249/mo), localization on all plans, AI-powered tours, and unlimited segmentation. PostHog available on Growth. Strong no-code editor — no developer dependency."
+    },
+    {
+      label: "🥈 Runner-Up",
+      name: "Userflow",
+      color: "#45B7D1",
+      desc: "91.2% score. Clean, modern UI with AI-powered FlowAI. Very low engineering dependency. Note: HubSpot requires Pro plan ($680/mo) — plan for upgrade cost. Best choice if budget allows and AI-driven onboarding is a priority."
+    },
+    {
+      label: "💰 Best Value",
+      name: "UserGuiding",
+      color: "#4ECDC4",
+      desc: "Most affordable entry at $174/mo. 30-day money-back guarantee. Important caveat: HubSpot integration requires Growth plan ($349/mo), not the base Starter. Good for teams wanting low financial risk with a proven tool."
+    },
+    {
+      label: "🎨 Best Customization",
+      name: "Chameleon",
+      color: "#96CEB4",
+      desc: "Best-in-class design flexibility and on-brand customization. HubSpot on all plans. Ideal if visual consistency with your product is the top priority."
+    },
+    {
+      label: "📊 Best Analytics",
+      name: "Pendo",
+      color: "#A29BFE",
+      desc: "Unmatched retroactive analytics and journey orchestration. Free tier available. Only recommended if deep product analytics is more important than pricing."
+    },
+    {
+      label: "💬 Best for Support+Onboarding",
+      name: "Intercom",
+      color: "#74B9FF",
+      desc: "If FaceUp already uses or plans to use Intercom for customer support, the Proactive Support Plus add-on ($99/mo) adds product tours, checklists, and surveys in one platform."
+    },
+    {
+      label: "⚠️ Avoid (Budget)",
+      name: "Appcues",
+      color: "#FD79A8",
+      desc: "Solid platform but expensive ($879/mo for full features). HubSpot is on select plans or as an add-on — not guaranteed on base plan. The requirements explicitly mention avoiding enterprise overkill."
+    },
+    {
+      label: "⚠️ Avoid (Budget)",
+      name: "Pendo",
+      color: "#A29BFE",
+      desc: "Custom pricing starting at $15K/year for paid plans. Excellent product but clearly enterprise-grade. Only viable if the free tier (500 MAUs) covers your needs."
+    },
+    {
+      label: "🚫 Excluded (Past Experience)",
+      name: "Product Fruits",
+      color: "#636e72",
+      desc: "Removed from evaluation. FaceUp used Product Fruits previously — team reported: frequent breakages and unreliability, heavy developer dependency for edits (all changes required dev involvement), technically complex to maintain across multiple user types (companies/schools/partners, trials/active), and poor usability for the marketing team."
+    },
+  ];
+
+  document.getElementById('rec-grid').innerHTML = recs.map(r => `
+    <div class="rec-card" style="--card-color:${r.color}">
+      <div class="rec-label">${r.label}</div>
+      <h4 style="color:${r.color}">${r.name}</h4>
+      <p>${r.desc}</p>
+    </div>
+  `).join('');
+}
+
+// ===================== NAV SCROLL SPY =====================
+function initScrollSpy() {
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 100) current = s.id;
+    });
+    links.forEach(l => {
+      l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+    });
+  }, { passive: true });
+}
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', () => {
+  renderCards();
+  renderTable();
+  renderCharts();
+  renderRecommendations();
+  initScrollSpy();
+});
+</script>
+</body>
+</html>
