@@ -595,6 +595,7 @@
   <a href="#overview" class="active">Overview</a>
   <a href="#charts">Charts</a>
   <a href="#comparison">Comparison Matrix</a>
+  <a href="#maturity">Company Maturity</a>
   <a href="#recommendations">Recommendations</a>
 </nav>
 
@@ -678,6 +679,23 @@
       <div class="legend-item"><span class="req-label req-nice">NICE</span> Nice-to-have</div>
     </div>
     <div class="table-wrap" id="comparison-table"></div>
+  </section>
+
+  <!-- ===== COMPANY MATURITY ===== -->
+  <section id="maturity">
+    <div class="section-title">Company Maturity &amp; Reliability</div>
+    <div class="section-subtitle">Founding year, company size, funding, release cadence, and notable customers — signals that a tool won't disappear or break on you.</div>
+    <div class="charts-grid" style="margin-bottom:32px;">
+      <div class="chart-card">
+        <h4>Founded Year</h4>
+        <canvas id="chartFounded"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>Total Funding Raised (USD)</h4>
+        <canvas id="chartFunding"></canvas>
+      </div>
+    </div>
+    <div id="maturity-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;margin-top:8px;"></div>
   </section>
 
   <!-- ===== RECOMMENDATIONS ===== -->
@@ -1339,6 +1357,210 @@ function renderRecommendations() {
   `).join('');
 }
 
+// ===================== COMPANY MATURITY DATA =====================
+const maturityData = {
+  "Jimo": {
+    founded: 2022,
+    employees: "11–50",
+    funding: "$2.97M",
+    fundingUSD: 2.97,
+    lastRound: "Angel, 2023",
+    investors: "Plum Ventures, Tomato Capital, Chen Qi + 3 others",
+    customers: "Zenchef, Shippeo, Believe, Pennylane, Lemlist, ABTasty, Bigcartel, Checkout.com",
+    releaseCadence: "Multiple times/month",
+    reliability: "No major issues found. Newer tool — limited track record.",
+    maturity: "Growing",
+    maturityColor: "#F0BF75", maturityLight: "#F2E8D9",
+    risk: "⚠ Some risk — founded 2022, angel-stage only"
+  },
+  "Userflow": {
+    founded: 2018,
+    employees: "1–10 (bootstrapped, acquired)",
+    funding: "Bootstrapped → acquired by Beamer >$60M",
+    fundingUSD: 60,
+    lastRound: "Acquisition by Beamer, Feb 2024",
+    investors: "Beamer (acquirer)",
+    customers: "SPARETECH, TimeTac, Visma Dinero, Streak, Stacker, Klevu, Evocalize",
+    releaseCadence: "Frequent (updates.userflow.com)",
+    reliability: "No major issues found. Acquisition by Beamer adds stability but may affect roadmap.",
+    maturity: "Established",
+    maturityColor: "#0085FF", maturityLight: "#E6F3FF",
+    risk: "✓ Low risk — bootstrapped success, acquired for >$60M"
+  },
+  "Chameleon": {
+    founded: 2015,
+    employees: "101–113",
+    funding: "$13M",
+    fundingUSD: 13,
+    lastRound: "Series A, 2022",
+    investors: "Matrix Partners, Kevin Wang",
+    customers: "Chili Piper, Fivetran, Degreed, Mixpanel, Vitally, Revenue Analytics, Lucy",
+    releaseCadence: "Weekly/Monthly (chameleon.io/whats-new)",
+    reliability: "No major issues. Status page shows all systems operational.",
+    maturity: "Growing",
+    maturityColor: "#9E8CFE", maturityLight: "#E5E1FE",
+    risk: "✓ Moderate — Series A, 100+ employees, 10 years old"
+  },
+  "Appcues": {
+    founded: 2013,
+    employees: "51–200",
+    funding: "$32.1M",
+    fundingUSD: 32.1,
+    lastRound: "Series B, 2022",
+    investors: "NewSpring Capital, Columbia Partners, Accomplice, Sierra Ventures",
+    customers: "Fullstory, AdRoll, Litmus, Hotjar, ProfitWell, Bynder, PandaDoc, MYOB",
+    releaseCadence: "Monthly (feedback.appcues.com/changelog)",
+    reliability: "No major issues found. Mature, battle-tested platform.",
+    maturity: "Established",
+    maturityColor: "#F790D4", maturityLight: "#FFE9F7",
+    risk: "✓ Low risk — Series B, 12 years old, well-known customers"
+  },
+  "Intercom": {
+    founded: 2011,
+    employees: "501–1,000",
+    funding: "$242M",
+    fundingUSD: 242,
+    lastRound: "Conventional Debt, March 2026",
+    investors: "Kleiner Perkins, Google Ventures, Bessemer, Index Ventures, Iconiq Capital",
+    customers: "Atlassian, Amazon, Lyft Business",
+    releaseCadence: "Weekly/Bi-weekly (intercom.com/changes)",
+    reliability: "Past outages reported. Payment issues mentioned on Reddit. Status page at intercomstatus.com.",
+    maturity: "Mature",
+    maturityColor: "#062A6A", maturityLight: "#E6F3FF",
+    risk: "✓ Very low risk — 14 years old, $242M raised, 500-1000 employees"
+  },
+  "Pendo": {
+    founded: 2013,
+    employees: "501–1,000",
+    funding: "$356M",
+    fundingUSD: 356,
+    lastRound: "Series F, 2021",
+    investors: "B Capital, Silver Lake, Battery Ventures, Meritech, General Atlantic, Tiger Global",
+    customers: "Verizon, RE/MAX, LabCorp, OpenTable, Okta, Salesforce, Zendesk, ADP",
+    releaseCadence: "Monthly (support.pendo.io/whats-new)",
+    reliability: "⚠ Outage April 13–14 2026 (event processing delays). G2 mentions data accuracy issues (44 mentions).",
+    maturity: "Mature",
+    maturityColor: "#9E8CFE", maturityLight: "#E5E1FE",
+    risk: "✓ Very low risk — $356M raised, enterprise customers, but recent outage noted"
+  },
+  "UserGuiding": {
+    founded: 2017,
+    employees: "51–100",
+    funding: "Seed (amount undisclosed)",
+    fundingUSD: 1,
+    lastRound: "Seed, 2020",
+    investors: "Undisclosed",
+    customers: "Cyndly, IOB Group, Flowla, ZAKEKE, TimeSolv, Unico",
+    releaseCadence: "Continuous (userguiding.com/product-updates)",
+    reliability: "No major issues. Positive G2 feedback on ease of use and support.",
+    maturity: "Growing",
+    maturityColor: "#F0BF75", maturityLight: "#F2E8D9",
+    risk: "⚠ Moderate — seed-only funding, but 8 years old and profitable-looking"
+  },
+  "Userpilot": {
+    founded: 2017,
+    employees: "51–100",
+    funding: "$5.95M",
+    fundingUSD: 5.95,
+    lastRound: "Seed, 2022",
+    investors: "Silicon Badia, ScOp Ventures, 500 Global",
+    customers: "Jiminy, LiveX, Cleeng, Amplemarket, Osano, RecruitNow, Smoobu",
+    releaseCadence: "Weekly/Bi-weekly (userpilot.com/blog)",
+    reliability: "No major issues. Status page shows high uptime over last 180 days.",
+    maturity: "Growing",
+    maturityColor: "#42BB90", maturityLight: "#EBF6F1",
+    risk: "⚠ Some risk — seed-stage, $5.95M raised, smaller customer base"
+  }
+};
+
+// ===================== RENDER MATURITY =====================
+function renderMaturity() {
+  const grid = document.getElementById('maturity-grid');
+  const maturityOrder = ['Mature', 'Established', 'Growing', 'Early-stage'];
+  const sorted = Object.keys(maturityData).sort((a,b) => {
+    return maturityOrder.indexOf(maturityData[a].maturity) - maturityOrder.indexOf(maturityData[b].maturity);
+  });
+
+  grid.innerHTML = sorted.map(name => {
+    const m = maturityData[name];
+    const t = tools[name];
+    const maturityBadgeColor = m.maturity === 'Mature' ? '#42BB90' : m.maturity === 'Established' ? '#0085FF' : m.maturity === 'Growing' ? '#F0BF75' : '#dc2626';
+    return `
+      <div style="background:${m.maturityLight};border:1px solid ${m.maturityColor}22;border-left:4px solid ${m.maturityColor};border-radius:12px;padding:20px 22px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <h4 style="color:${m.maturityColor};margin:0;font-size:17px;">${name}</h4>
+          <span style="background:${maturityBadgeColor};color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;">${m.maturity}</span>
+        </div>
+        <div style="font-size:12px;color:#4a5568;line-height:1.9;">
+          <div><strong style="color:#062D46;">Founded:</strong> ${m.founded} &nbsp;·&nbsp; <strong style="color:#062D46;">Employees:</strong> ${m.employees}</div>
+          <div><strong style="color:#062D46;">Funding:</strong> ${m.funding} &nbsp;·&nbsp; <strong style="color:#062D46;">Last round:</strong> ${m.lastRound}</div>
+          <div><strong style="color:#062D46;">Investors:</strong> ${m.investors}</div>
+          <div style="margin-top:6px;"><strong style="color:#062D46;">Notable customers:</strong> ${m.customers}</div>
+          <div style="margin-top:6px;"><strong style="color:#062D46;">Release cadence:</strong> ${m.releaseCadence}</div>
+          <div style="margin-top:6px;padding:6px 10px;background:rgba(255,255,255,0.7);border-radius:6px;border-left:3px solid ${maturityBadgeColor};">${m.risk}</div>
+          <div style="margin-top:6px;font-size:11px;color:#718096;">${m.reliability}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Founded year chart
+  const names = sorted;
+  const foundedColors = names.map(n => maturityData[n].maturityColor);
+  new Chart(document.getElementById('chartFounded'), {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [{
+        label: 'Founded Year',
+        data: names.map(n => maturityData[n].founded),
+        backgroundColor: foundedColors.map(c => c + 'bb'),
+        borderColor: foundedColors,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `Founded: ${ctx.raw}` } }
+      },
+      scales: {
+        x: { ticks: { color: '#4a5568' }, grid: { color: '#dde6f0' } },
+        y: { min: 2008, ticks: { color: '#4a5568', callback: v => v }, grid: { color: '#dde6f0' } }
+      }
+    }
+  });
+
+  // Funding chart
+  new Chart(document.getElementById('chartFunding'), {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [{
+        label: 'Total Funding ($M)',
+        data: names.map(n => maturityData[n].fundingUSD),
+        backgroundColor: foundedColors.map(c => c + 'bb'),
+        borderColor: foundedColors,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `$${ctx.raw}M raised` } }
+      },
+      scales: {
+        x: { ticks: { color: '#4a5568' }, grid: { color: '#dde6f0' } },
+        y: { ticks: { color: '#4a5568', callback: v => '$' + v + 'M' }, grid: { color: '#dde6f0' } }
+      }
+    }
+  });
+}
+
 // ===================== NAV SCROLL SPY =====================
 function initScrollSpy() {
   const sections = document.querySelectorAll('section[id]');
@@ -1359,6 +1581,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCards();
   renderTable();
   renderCharts();
+  renderMaturity();
   renderRecommendations();
   initScrollSpy();
 });
